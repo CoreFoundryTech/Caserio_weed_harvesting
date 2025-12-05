@@ -2,35 +2,39 @@ fx_version 'cerulean'
 game 'gta5'
 lua54 'yes'
 
-author 'mri'
+description 'Caserio Weed Harvesting Next-Gen'
 version '2.0.0'
-description 'Weed Planting System using mriprops'
+
+-- UI React Build
+ui_page 'web/dist/index.html'
+
+files {
+    'web/dist/index.html',
+    'web/dist/assets/*.js',
+    'web/dist/assets/*.css',
+    'locales/*.lua',
+    'stream/*.ydr',
+    'stream/*.ytyp'
+}
 
 shared_scripts {
-    '@oxmysql/lib/MySQL.lua',
+    'config.lua',
     'locales/locale.lua',
-    'locales/en.lua',
-    'locales/es.lua',
-    'config.lua'
+    'locales/*.lua' 
 }
 
 client_scripts {
-    '@qb-core/shared/locale.lua',
-    'locales/locale.lua',
-    'locales/*.lua',
-    'config.lua',
-    'client/main.lua',
-    'client/interactions.lua',
-    'client/effects.lua'
+    '@PolyZone/client.lua',
+    '@qb-core/shared/init.lua',
+    'client/growth_logic.lua',
+    'client/main.lua'
 }
 
 server_scripts {
+    '@oxmysql/lib/MySQL.lua',
     'server/main.lua'
 }
 
-ui_page 'ui/index.html'
-
-files {
     'ui/index.html',
     'ui/style.css',
     'ui/script.js',

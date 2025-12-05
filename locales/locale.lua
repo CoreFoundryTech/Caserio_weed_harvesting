@@ -24,5 +24,5 @@ end
 
 CreateThread(function()
     Wait(1000)
-    print('^2[mriprops_weed]^7 Locale set to: ^3' .. Locale.CurrentLocale .. '^7')
+    print('^2[Caserio RP]^7 Locale set to: ^3' .. Locale.CurrentLocale .. '^7')
 end)
