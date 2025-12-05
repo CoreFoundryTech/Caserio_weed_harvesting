@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weed Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="container" id="app" style="display: none;">
+        <div class="dashboard">
+            <div class="header">
+                <div class="title-group">
+                    <i class="fas fa-cannabis logo"></i>
+                    <div>
+                        <h1 id="strain-name">Blue Dream</h1>
+                        <span class="subtitle" id="strain-type">Hybrid Sativa</span>
+                    </div>
+                </div>
+                <div class="close-btn" id="close-btn"><i class="fas fa-times"></i></div>
+            </div>
+
+            <div class="main-stats">
+                <div class="stat-box">
+                    <div class="stat-icon"><i class="fas fa-heart"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-label" id="lbl-health">Health</span>
+                        <span class="stat-value" id="health-value">100%</span>
+                    </div>
+                    <div class="stat-bar-bg">
+                        <div class="stat-bar" id="health-bar" style="width: 100%;"></div>
+                    </div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-icon"><i class="fas fa-tint"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-label" id="lbl-water">Water</span>
+                        <span class="stat-value" id="water-value">95%</span>
+                    </div>
+                    <div class="stat-bar-bg">
+                        <div class="stat-bar blue" id="water-bar" style="width: 95%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="growth-section">
+                <div class="section-header">
+                    <span class="section-title" id="lbl-stage">Growth Stage</span>
+                    <span class="stage-badge" id="stage-value">Vegetative</span>
+                </div>
+
+                <div class="circular-progress-container">
+                    <div class="growth-info">
+                        <span class="growth-percent" id="growth-value">45%</span>
+                        <span class="growth-label" id="lbl-growth">MATURITY</span>
+                    </div>
+                    <div class="progress-bar-linear-bg">
+                        <div class="progress-bar-linear" id="growth-bar" style="width: 45%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button id="harvest-btn" class="btn btn-primary" disabled>
+                    <i class="fas fa-sickle"></i> <span id="lbl-harvest">HARVEST PLANT</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>
