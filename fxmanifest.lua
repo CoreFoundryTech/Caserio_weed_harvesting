@@ -4,7 +4,7 @@ lua54 'yes'
 
 author 'Caserio RP'
 description 'Caserio Weed Harvesting'
-version '2.0.0'
+version '1.0.0'
 
 -- UI React Build
 ui_page 'web/dist/index.html'

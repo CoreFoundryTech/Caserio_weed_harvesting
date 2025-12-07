@@ -1,23 +1,20 @@
 import { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import './index.css';
 
+// Interfaz para los datos que vienen desde LUA
 interface PlantData {
   id: number;
   strain: string;
-  stage: number;
-  stageName: string;
-  label: string;
-  health: number;
-  water: number;
-  growthPercent: number;
+  label: string; // Nombre de la planta
+  growthPercent: number; // 0 a 100
   isReady: boolean;
-  plantCount?: number;
+  plantCount?: number; // Opcional por si el LUA no lo envía en algún update
   maxPlants?: number;
 }
 
 function App() {
   const [visible, setVisible] = useState(false);
-  const [plant, setPlant] = useState<PlantData | null>(null);
+  const [data, setData] = useState<PlantData | null>(null);
 
   const getResourceName = () => (window as any).GetParentResourceName?.() || 'caserio_weed_harvesting';
 
@@ -26,167 +23,144 @@ function App() {
     fetch(`https://${getResourceName()}/close`, { method: 'POST', body: '{}' }).catch(() => { });
   }, []);
 
-  const handleHarvest = useCallback((id: number) => {
+  const handleHarvest = useCallback(() => {
+    if (!data) return;
     setVisible(false);
-    fetch(`https://${getResourceName()}/harvest`, { method: 'POST', body: JSON.stringify({ plantId: id }) }).catch(() => { });
-  }, []);
+    fetch(`https://${getResourceName()}/harvest`, {
+      method: 'POST',
+      body: JSON.stringify({ plantId: data.id })
+    }).catch(() => { });
+  }, [data]);
 
   useEffect(() => {
-    const handler = (e: MessageEvent) => {
-      if (e.data?.action === 'open') { setPlant(e.data.plant); setVisible(true); }
-      if (e.data?.action === 'update') setPlant(e.data.plant);
+    const handleNuiMessage = (event: MessageEvent) => {
+      const { action, plant } = event.data;
+      if (action === 'open') {
+        setData(plant);
+        setVisible(true);
+      }
+      if (action === 'update' && visible) {
+        setData(plant);
+      }
     };
-    window.addEventListener('message', handler);
-    return () => window.removeEventListener('message', handler);
-  }, []);
 
+    window.addEventListener('message', handleNuiMessage);
+    return () => window.removeEventListener('message', handleNuiMessage);
+  }, [visible]);
+
+  // Manejo de tecla ESC y E
   useEffect(() => {
-    const keyHandler = (e: KeyboardEvent) => { if (visible && e.key === 'Escape') handleClose(); };
+    const keyHandler = (e: KeyboardEvent) => {
+      if (!visible) return;
+      if (e.key === 'Escape') handleClose();
+      if (e.key.toLowerCase() === 'e' && data?.isReady) handleHarvest();
+    };
     window.addEventListener('keydown', keyHandler);
     return () => window.removeEventListener('keydown', keyHandler);
-  }, [visible, handleClose]);
+  }, [visible, data, handleClose, handleHarvest]);
 
-  const getStage = (s: number, n: string) => n?.includes('stage_') ? ['Plántula', 'Vegetativa', 'Floración'][s] : n;
+  if (!visible || !data) return null;
 
-  if (!visible || !plant) return null;
+  // Calculamos color del badge de plantas (rojo si está lleno)
+  const isFull = (data.plantCount || 0) >= (data.maxPlants || 5);
+  const plantBadgeColor = isFull ? 'text-orange-400 bg-orange-500/10 border-orange-500/20' : 'text-purple-300 bg-purple-500/10 border-purple-500/20';
 
   return (
-    <div style={{ position: 'fixed', bottom: 40, right: 40, pointerEvents: 'auto' }}>
-      <AnimatePresence>
-        <motion.div
-          key="card"
-          initial={{ opacity: 0, x: 30 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: 30 }}
-          transition={{ type: 'spring', damping: 22, stiffness: 280 }}
-          style={{
-            width: 300,
-            padding: '22px 24px',
-            borderRadius: 16,
-            background: 'linear-gradient(180deg, rgba(25,25,35,0.85) 0%, rgba(18,18,28,0.75) 100%)',
-            backdropFilter: 'blur(12px)',
-            WebkitBackdropFilter: 'blur(12px)',
-            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-            color: '#fff',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.35)'
-          }}
-        >
-          {/* Header */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
-            <div>
-              <div style={{
-                fontSize: 20,
-                fontWeight: 700,
-                color: '#fff',
-                letterSpacing: '-0.5px',
-                textShadow: '0 2px 10px rgba(0,0,0,0.3)'
-              }}>{plant.label}</div>
-              <div style={{
-                fontSize: 11,
-                marginTop: 8,
-                padding: '5px 14px',
-                borderRadius: 20,
-                display: 'inline-block',
-                background: plant.isReady
-                  ? 'linear-gradient(90deg, rgba(45,212,191,0.25), rgba(34,197,94,0.2))'
-                  : 'linear-gradient(90deg, rgba(168,85,247,0.2), rgba(139,92,246,0.15))',
-                color: plant.isReady ? '#5eead4' : '#c4b5fd',
-                fontWeight: 600,
-                letterSpacing: 0.8,
-                textTransform: 'uppercase'
-              }}>{getStage(plant.stage, plant.stageName)}{plant.isReady && ' ✓'}</div>
+    // CONTENEDOR FLOTANTE - ABAJO A LA DERECHA
+    <div className="fixed bottom-10 right-10 flex flex-col items-end gap-2 pointer-events-auto font-sans">
+
+      {/* TARJETA PRINCIPAL */}
+      <div className="
+        relative w-[340px] rounded-xl overflow-hidden
+        animate-fade-in
+        /* Borde Neón Sutil */
+        p-[1px] bg-gradient-to-r from-pink-500/50 via-purple-500/50 to-cyan-500/50
+        shadow-[0_0_30px_rgba(0,0,0,0.5)]
+      ">
+
+        {/* FONDO REALMENTE TRANSPARENTE (GLASSMORPHISM) */}
+        <div className="
+          relative w-full h-full
+          bg-black/10             /* 10% opacidad (muy transparente) */
+          backdrop-blur-md        /* Efecto borroso elegante */
+          p-5
+          flex items-center gap-4
+          drop-shadow-md          /* Sombra en textos para legibilidad */
+        ">
+
+          {/* ICONO HOJA GRANDE CON NEÓN */}
+          <div className="relative shrink-0 flex flex-col items-center gap-2">
+            <div className="relative">
+              <div className="absolute inset-0 bg-green-500/20 blur-xl rounded-full animate-pulse"></div>
+              {/* SVG Icono de Hoja de Marihuana */}
+              <svg
+                className={`w-12 h-12 drop-shadow-[0_0_10px_rgba(74,222,128,0.6)] transition-colors duration-500 ${data.isReady ? 'text-green-400' : 'text-gray-400'}`}
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path d="M16.5,8c0.8-0.6,2-0.4,2.6,0.2c0.3,0.3,0.5,0.7,0.5,1.1c0,1.8-1.4,4.2-3.5,6c-0.6,0.5-1.5,0.5-2.1-0.1 c-0.1-0.1-0.2-0.2-0.3-0.3c-1.4-1.6-1.9-3.4-1.6-4.9c0.2-0.8,0.8-1.5,1.5-1.8C14.5,7.8,15.6,7.6,16.5,8z M8.1,9.4 c0.6-0.5,1.5-0.5,2.1,0.1c0.1,0.1,0.2,0.2,0.3,0.3c1.4,1.6,1.9,3.4,1.6,4.9c-0.2,0.8-0.8,1.5-1.5,1.8c-0.9,0.4-2,0.5-2.9,0.2 c-0.8-0.6-2-0.4-2.6,0.2c-0.3,0.3-0.5,0.7-0.5,1.1c0,1.8,1.4,4.2,3.5,6C7.5,23.5,6.6,23.5,6,22.9C6,22.9,6,22.9,6,22.9 c-1.4-1.6-1.9-3.4-1.6-4.9c0.2-0.8,0.8-1.5,1.5-1.8C6.9,15.8,8,15.6,8.1,9.4z M12,2c1.1,0,2,0.9,2,2c0,3-1.6,6.6-4,9 c-0.6,0.6-1.5,0.6-2.1,0c0,0,0,0,0,0c-0.6-0.6-0.6-1.5,0-2.1C10.4,8.6,12,5,12,2z" />
+              </svg>
             </div>
-            <div
-              onClick={handleClose}
-              style={{
-                cursor: 'pointer',
-                color: 'rgba(255,255,255,0.4)',
-                fontSize: 16,
-                padding: 8,
-                borderRadius: 8,
-                transition: 'all 0.2s'
-              }}
-            >✕</div>
+
+            {/* BADGE DE PLANTAS INTEGRADO BAJO EL ICONO */}
+            <div className={`
+              flex items-center gap-1 px-1.5 py-0.5 rounded
+              border text-[9px] font-bold tracking-wider
+              ${plantBadgeColor}
+            `}>
+              <span>🌱</span>
+              <span>{data.plantCount ?? 0}/{data.maxPlants ?? 5}</span>
+            </div>
           </div>
 
-          {/* Stats Container */}
-          <div style={{
-            background: 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.02) 100%)',
-            borderRadius: 14,
-            padding: '16px 18px',
-            marginBottom: 14
-          }}>
-            {[
-              { label: 'Crecimiento', value: plant.growthPercent, gradient: 'linear-gradient(90deg, #a855f7, #ec4899)' },
-              { label: 'Salud', value: plant.health, gradient: plant.health > 50 ? 'linear-gradient(90deg, #22c55e, #10b981)' : 'linear-gradient(90deg, #f59e0b, #ef4444)' },
-              { label: 'Agua', value: plant.water, gradient: 'linear-gradient(90deg, #0ea5e9, #06b6d4)' }
-            ].map((stat, idx) => (
-              <div key={idx} style={{ marginBottom: idx < 2 ? 14 : 0 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 500 }}>{stat.label}</span>
-                  <span style={{ fontSize: 13, color: '#fff', fontWeight: 700 }}>{stat.value}%</span>
+          {/* INFO TEXTO */}
+          <div className="flex-1 min-w-0 flex flex-col justify-center">
+            <div className="flex justify-between items-start">
+              <h2 className="text-white font-bold text-lg tracking-wide truncate drop-shadow-md pr-2">
+                {data.label || 'Planta Desconocida'}
+              </h2>
+
+              {/* INDICADOR DE COSECHA INTEGRADO (Solo si está listo) */}
+              {data.isReady && (
+                <div
+                  className="
+                    flex items-center gap-1.5 px-2 py-1 rounded
+                    bg-green-500/20 border border-green-500/30
+                    animate-pulse cursor-pointer group hover:bg-green-500/30 transition-colors
+                  "
+                  onClick={handleHarvest}
+                >
+                  <div className="
+                    w-4 h-4 flex items-center justify-center 
+                    bg-white text-black font-bold rounded-[3px] text-[10px]
+                    shadow-sm
+                  ">E</div>
+                  <span className="text-[10px] font-bold text-green-300 tracking-wider">COSECHAR</span>
                 </div>
-                <div style={{
-                  height: 6,
-                  background: 'rgba(255,255,255,0.08)',
-                  borderRadius: 8,
-                  overflow: 'hidden'
-                }}>
-                  <motion.div
-                    animate={{ width: `${stat.value}%` }}
-                    transition={{ duration: 0.5, ease: 'easeOut' }}
-                    style={{
-                      height: '100%',
-                      background: stat.gradient,
-                      borderRadius: 8,
-                      boxShadow: '0 0 12px rgba(168,85,247,0.3)'
-                    }}
-                  />
-                </div>
-              </div>
-            ))}
+              )}
+            </div>
+
+            {/* Barra Progreso Minimalista */}
+            <div className="mt-2 w-full bg-white/10 h-1.5 rounded-full overflow-hidden backdrop-blur-sm">
+              <div
+                className={`h-full shadow-[0_0_10px_currentColor] transition-all duration-700 ease-out ${data.isReady ? 'bg-green-400 text-green-400 w-full' : 'bg-pink-500 text-pink-500'
+                  }`}
+                style={{ width: `${data.growthPercent}%` }}
+              />
+            </div>
+
+            <div className="flex justify-between items-center mt-1">
+              <span className="text-[10px] text-gray-300 uppercase tracking-wider font-semibold opacity-80">
+                {data.isReady ? 'LISTO' : 'CRECIENDO...'}
+              </span>
+              <span className={`text-xs font-bold ${data.isReady ? 'text-green-400' : 'text-pink-400'}`}>
+                {data.growthPercent}%
+              </span>
+            </div>
           </div>
 
-          {/* Plant Count */}
-          {plant.plantCount !== undefined && (
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              padding: '12px 16px',
-              background: 'linear-gradient(90deg, rgba(168,85,247,0.1), rgba(139,92,246,0.08))',
-              borderRadius: 12,
-              marginBottom: plant.isReady ? 14 : 0
-            }}>
-              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 500 }}>🌱 Plantas activas</span>
-              <span style={{ fontSize: 15, color: '#c4b5fd', fontWeight: 700 }}>{plant.plantCount} / {plant.maxPlants}</span>
-            </div>
-          )}
-
-          {/* Harvest Button */}
-          {plant.isReady && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              onClick={() => handleHarvest(plant.id)}
-              style={{
-                padding: '14px 0',
-                textAlign: 'center',
-                borderRadius: 14,
-                background: 'linear-gradient(135deg, #14b8a6, #0d9488)',
-                color: '#fff',
-                fontSize: 14,
-                fontWeight: 700,
-                cursor: 'pointer',
-                letterSpacing: 0.5,
-                boxShadow: '0 4px 20px rgba(20,184,166,0.35)',
-                textTransform: 'uppercase'
-              }}
-            >🌿 Cosechar</motion.div>
-          )}
-        </motion.div>
-      </AnimatePresence>
+        </div>
+      </div>
     </div>
   );
 }
