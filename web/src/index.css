@@ -1,9 +1,34 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  border: none !important;
+  outline: none !important;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  background: transparent !important;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 
 body {
-  background-color: transparent;
-  overflow: hidden;
-  font-family: 'Inter', sans-serif;
+  background-color: transparent !important;
+}
+
+button {
+  border: none !important;
+  outline: none !important;
+}
+
+button:focus,
+button:active {
+  outline: none !important;
+  border: none !important;
 }

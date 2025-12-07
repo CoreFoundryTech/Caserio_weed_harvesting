@@ -2,7 +2,8 @@ fx_version 'cerulean'
 game 'gta5'
 lua54 'yes'
 
-description 'Caserio Weed Harvesting Next-Gen'
+author 'Caserio RP'
+description 'Caserio Weed Harvesting'
 version '2.0.0'
 
 -- UI React Build
@@ -12,21 +13,19 @@ files {
     'web/dist/index.html',
     'web/dist/assets/*.js',
     'web/dist/assets/*.css',
-    'locales/*.lua',
-    'stream/*.ydr',
     'stream/*.ytyp'
 }
 
 shared_scripts {
     'config.lua',
     'locales/locale.lua',
-    'locales/*.lua' 
+    'locales/en.lua',
+    'locales/es.lua'
 }
 
 client_scripts {
-    '@PolyZone/client.lua',
-    '@qb-core/shared/init.lua',
     'client/growth_logic.lua',
+    'client/effects.lua',
     'client/main.lua'
 }
 
@@ -35,17 +34,8 @@ server_scripts {
     'server/main.lua'
 }
 
-    'ui/index.html',
-    'ui/style.css',
-    'ui/script.js',
-    'stream/*.ytyp'
-}
-
 this_is_a_map 'yes'
 
-file {
-      'stream/*.ytyp'
-}
-
 data_file 'DLC_ITYP_REQUEST' 'stream/*.ytyp'
+
 dependency '/assetpacks'

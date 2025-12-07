@@ -1,7 +1,9 @@
 Locale = {}
-local rawLocale = GetConvar('qb_locale', GetConvar('locale', 'en'))
-Locale.CurrentLocale = string.match(rawLocale, '^([a-z]+)') or rawLocale
-Locale.Fallback = 'en'
+
+-- Get locale from server config, default to Spanish
+local rawLocale = GetConvar('qb_locale', GetConvar('locale', 'es'))
+Locale.CurrentLocale = string.match(rawLocale, '^([a-z]+)') or 'es'
+Locale.Fallback = 'es' -- Changed fallback to Spanish
 Locale.Translations = {}
 
 function Locale.RegisterLocale(locale, translations)
@@ -11,18 +13,29 @@ end
 function _L(key, ...)
     local locale = Locale.CurrentLocale
     local translations = Locale.Translations[locale]
-    if not translations then translations = Locale.Translations[Locale.Fallback] end
-    local translation = translations and translations[key]
-    if not translation and locale ~= Locale.Fallback then
-        local fallbackTranslations = Locale.Translations[Locale.Fallback]
-        translation = fallbackTranslations and fallbackTranslations[key]
+    
+    -- Try current locale
+    if translations and translations[key] then
+        if ... then 
+            return string.format(translations[key], ...) 
+        end
+        return translations[key]
     end
-    if not translation then return key end
-    if ... then return string.format(translation, ...) end
-    return translation
+    
+    -- Try fallback
+    local fallback = Locale.Translations[Locale.Fallback]
+    if fallback and fallback[key] then
+        if ... then 
+            return string.format(fallback[key], ...) 
+        end
+        return fallback[key]
+    end
+    
+    -- Return key if nothing found
+    return key
 end
 
 CreateThread(function()
-    Wait(1000)
-    print('^2[Caserio RP]^7 Locale set to: ^3' .. Locale.CurrentLocale .. '^7')
+    Wait(500)
+    print('^2[Caserio Weed]^7 Locale: ^3' .. Locale.CurrentLocale .. '^7 | Translations loaded: ^3' .. (Locale.Translations['es'] and 'ES' or 'NO') .. '^7')
 end)
